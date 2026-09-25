@@ -16,6 +16,8 @@ class DataProviderName(str, Enum):
 class UniverseName(str, Enum):
     SP500 = "sp500"
     NASDAQ100 = "nasdaq100"
+    DAX40 = "dax40"
+    EUROSTOXX50 = "eurostoxx50"
     CUSTOM = "custom"
 
 

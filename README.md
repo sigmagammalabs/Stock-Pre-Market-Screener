@@ -35,6 +35,14 @@ Eigenes Ticker-Universum:
 python main.py scan --universe custom --tickers AAPL,NVDA,TSLA,AMD
 ```
 
+DAX 40 oder EURO STOXX 50 scannen (europäische Ticker, kein echtes "Pre-Market" -
+stattdessen Gap zum Vortagesschluss während der regulären Handelszeiten):
+
+```bash
+python main.py scan --universe dax40
+python main.py scan --universe eurostoxx50
+```
+
 Telegram-Bot im Dauerbetrieb starten (Natural-Language-Kommandos wie
 "Scanne nur Halbleiter mit hohem Volumen" via Groq, Fallback auf `/scan` und
 `/quote TICKER ...` ohne Groq-Key):
@@ -47,7 +55,7 @@ python main.py listen
 
 | Flag | Beschreibung | Default |
 |---|---|---|
-| `--universe` | `sp500`, `nasdaq100`, `custom` | `nasdaq100` |
+| `--universe` | `sp500`, `nasdaq100`, `dax40`, `eurostoxx50`, `custom` | `nasdaq100` |
 | `--tickers` | Kommagetrennte Liste (nur mit `--universe custom`) | - |
 | `--provider` | `yfinance`, `alpaca` (Stub), `fmp` (Stub) | `yfinance` |
 | `--min-price` | Mindestkurs in USD | `10.0` |
