@@ -47,7 +47,14 @@ def _handle_message(text: str, config: ScreenerConfig, secrets: Secrets) -> str:
     if action == "help":
         return HELP_TEXT
 
+    if action == "quote" and not filters.get("tickers"):
+        return "⚠️ Für eine Kursabfrage bitte mindestens einen Ticker nennen, z. B. \"Zeig mir AAPL\"."
+
     if action in ("scan", "quote"):
+        # "quote" ist eine explizite Ticker-Anfrage - Scan-Schwellenwerte (Gap%,
+        # RVOL, Mindestpreis/-volumen) werden hier bewusst umgangen, da der
+        # Nutzer den Ticker namentlich angefragt hat und ihn sehen möchte,
+        # unabhängig davon, ob er die Scan-Kriterien erfüllt.
         override_tickers = filters.get("tickers") if action == "quote" else None
         try:
             df = screener_engine.screen_market(
@@ -56,6 +63,7 @@ def _handle_message(text: str, config: ScreenerConfig, secrets: Secrets) -> str:
                 override_tickers=override_tickers,
                 min_rvol_override=filters.get("min_rvol"),
                 min_gap_pct_override=filters.get("min_gap_pct"),
+                enforce_filters=(action == "scan"),
             )
         except Exception as exc:
             logger.exception("Scan im Bot-Modus fehlgeschlagen")

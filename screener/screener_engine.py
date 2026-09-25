@@ -25,7 +25,14 @@ def screen_market(
     override_tickers: list[str] | None = None,
     min_rvol_override: float | None = None,
     min_gap_pct_override: float | None = None,
+    enforce_filters: bool = True,
 ) -> pd.DataFrame:
+    """
+    enforce_filters=False skips gap/RVOL/price/volume thresholds entirely -
+    used for explicit single-ticker lookups (e.g. Telegram "quote" intent),
+    where the user asked for that ticker by name and expects to see it
+    regardless of whether it would clear the broad-scan screening criteria.
+    """
     tickers = override_tickers or get_tickers(config.universe, config.custom_tickers)
     logger.info("Screening %d tickers via provider=%s", len(tickers), config.provider)
 
@@ -37,8 +44,12 @@ def screen_market(
 
     quotes = provider.fetch_quote_batch(list(histories.keys()), config.max_workers)
 
-    min_gap_pct = min_gap_pct_override if min_gap_pct_override is not None else config.min_gap_pct
-    min_rvol = min_rvol_override if min_rvol_override is not None else config.min_rvol
+    if enforce_filters:
+        min_gap_pct = min_gap_pct_override if min_gap_pct_override is not None else config.min_gap_pct
+        min_rvol = min_rvol_override if min_rvol_override is not None else config.min_rvol
+    else:
+        min_gap_pct = 0.0
+        min_rvol = 0.0
 
     rows = []
     for ticker, history in histories.items():
@@ -48,7 +59,7 @@ def screen_market(
             continue
 
         try:
-            row = _build_row(ticker, history, quote, config, min_gap_pct, min_rvol)
+            row = _build_row(ticker, history, quote, config, min_gap_pct, min_rvol, enforce_filters)
         except Exception as exc:
             logger.warning("Skipping %s due to calculation error: %s", ticker, exc)
             continue
@@ -64,15 +75,17 @@ def screen_market(
     return df
 
 
-def _build_row(ticker, history, quote, config: ScreenerConfig, min_gap_pct: float, min_rvol: float):
+def _build_row(ticker, history, quote, config: ScreenerConfig, min_gap_pct: float, min_rvol: float,
+               enforce_filters: bool = True):
     close = history["Close"]
     volume = history["Volume"]
 
     avg_vol_20 = indicators.avg_volume(volume, config.avg_volume_period).iloc[-1]
-    if pd.isna(avg_vol_20) or avg_vol_20 < config.min_avg_volume:
-        return None
-    if quote.price < config.min_price:
-        return None
+    if enforce_filters:
+        if pd.isna(avg_vol_20) or avg_vol_20 < config.min_avg_volume:
+            return None
+        if quote.price < config.min_price:
+            return None
 
     sma20 = indicators.sma(close, 20).iloc[-1]
     sma50 = indicators.sma(close, 50).iloc[-1]
