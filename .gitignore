@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+.env
+
+watchlist/*.csv
+watchlist/*.json
+watchlist/*.log
+!watchlist/.gitkeep
+
+.vscode/*
+!.vscode/launch.json

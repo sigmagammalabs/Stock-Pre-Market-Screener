@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Scan (custom tickers)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": ["scan", "--universe", "custom", "--tickers", "AAPL,NVDA,TSLA,AMD,MSFT", "--min-gap-pct", "0.1", "--verbose"]
+        },
+        {
+            "name": "Scan (S&P 500 + Export + Telegram + AI)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": ["scan", "--universe", "sp500", "--export", "both", "--notify-telegram", "--ai-briefing"]
+        },
+        {
+            "name": "Telegram Listener",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": ["listen", "--universe", "custom", "--tickers", "AAPL,NVDA,TSLA,AMD,MSFT"]
+        }
+    ]
+}
