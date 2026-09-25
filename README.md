@@ -117,7 +117,7 @@ bash deploy/install_cron.sh
 **Hinweise:**
 - Cron/Listener sind aktuell auf `eurostoxx50` und die Europe/Berlin-Serverzeitzone kalibriert. Für ein US-Setup (`sp500`/`nasdaq100`) `deploy/run_scan.sh`, `deploy/watchlist-listener.service.template` und die Cron-Uhrzeit in `deploy/install_cron.sh` entsprechend anpassen (US-Pre-Market liegt bei Berlin-Serverzeit ca. 6h vor der Cron-Zeit einer europäischen Marktöffnung).
 - Serverzeitzone beachten (`timedatectl`) - die Cron-Uhrzeit in `deploy/install_cron.sh` ist auf Serverzeit bezogen.
-- Nach jedem `git pull` auf dem VPS: `sudo systemctl restart watchlist-listener`, damit der Listener den neuen Code lädt.
+- Nach jedem `git pull` auf dem VPS: `sudo systemctl restart watchlist-listener`, damit der Listener den neuen Python-Code lädt. **Ändert sich aber `deploy/watchlist-listener.service.template` selbst** (z. B. `--universe`/`--tickers`-Argumente), reicht ein reines `restart` nicht - die bereits unter `/etc/systemd/system/` installierte Unit-Datei wird dadurch nicht aktualisiert. Dann erneut `sudo bash deploy/install_listener_service.sh` ausführen (schreibt die Unit-Datei neu, macht `daemon-reload` und startet neu).
 - `.env` niemals ins Git-Repo committen (ist in `.gitignore` ausgeschlossen).
 
 Der Telegram-Listener (`python main.py listen`) ist ein Dauerprozess und
