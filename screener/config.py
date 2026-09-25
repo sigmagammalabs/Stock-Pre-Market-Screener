@@ -74,4 +74,7 @@ class Secrets:
         )
 
 
-GROQ_MODEL = "llama-3.3-70b-versatile"
+# llama-3.3-70b-versatile wurde von Groq entfernt (Stand 09/2026); gpt-oss-120b
+# unterstützt json_mode + structured_outputs und läuft auf Groqs Hardware
+# ähnlich schnell trotz der größeren Parameterzahl.
+GROQ_MODEL = "openai/gpt-oss-120b"
