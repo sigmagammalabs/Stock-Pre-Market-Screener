@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# Trägt den täglichen Pre-Market-Scan als Cronjob ein (Mo-Fr, 08:45 Uhr Serverzeit).
-# Server-Zeitzone beachten! US-Pre-Market startet ca. 09:00-14:30 Uhr MEZ/MESZ,
-# je nach Sommer-/Winterzeit-Differenz zu den USA. Zeit ggf. in der Crontab-Zeile
-# unten anpassen, oder Serverzeitzone mit `sudo timedatectl set-timezone Europe/Berlin` setzen.
+# Trägt den täglichen Pre-Market-Scan als Cronjob ein (Mo-Fr, 08:45 Uhr US-Ostküstenzeit).
+#
+# Die Cron-Uhrzeit unten ist auf Europe/Berlin-Serverzeit kalibriert: Berlin liegt
+# die meiste Zeit des Jahres 6 Stunden vor US-Ostküstenzeit (beide Zonen wechseln
+# zu leicht unterschiedlichen Terminen in die Sommerzeit, wodurch die Differenz für
+# ca. 1-3 Wochen im Frühjahr/Herbst auf 5 Stunden abweicht - für einen taeglichen
+# Scan i.d.R. vernachlässigbar). 08:45 Uhr ET => 14:45 Uhr Berlin.
+# Läuft der Server in einer anderen Zeitzone, hier oder direkt per
+# `sudo timedatectl set-timezone America/New_York` (DST-automatisch, exakt) anpassen.
 #
 # Nutzung: bash deploy/install_cron.sh
 
@@ -10,7 +15,7 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_SCRIPT="$PROJECT_DIR/deploy/run_scan.sh"
-CRON_LINE="45 8 * * 1-5 $RUN_SCRIPT >> $PROJECT_DIR/watchlist/cron.log 2>&1"
+CRON_LINE="45 14 * * 1-5 $RUN_SCRIPT >> $PROJECT_DIR/watchlist/cron.log 2>&1"
 
 chmod +x "$RUN_SCRIPT"
 
