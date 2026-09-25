@@ -110,12 +110,13 @@ bash deploy/install_cron.sh
 |---|---|
 | `deploy/setup_vps.sh` | Einmaliges Setup: Pakete, venv, Dependencies, `.env`-Vorlage |
 | `deploy/install_listener_service.sh` | Installiert `watchlist-listener` als systemd-Service (Auto-Restart, Autostart) |
-| `deploy/install_cron.sh` | Trägt `deploy/run_scan.sh` werktags 08:45 Uhr (Serverzeit) in die Crontab ein |
-| `deploy/run_scan.sh` | Cron-Wrapper: aktiviert venv, ruft `main.py scan` mit Standardparametern auf |
-| `deploy/watchlist-listener.service.template` | systemd-Unit-Vorlage (Platzhalter werden vom Install-Skript ersetzt) |
+| `deploy/install_cron.sh` | Trägt `deploy/run_scan.sh` werktags 08:15 Uhr Berlin-Zeit (45 Min. vor Xetra-Öffnung) in die Crontab ein |
+| `deploy/run_scan.sh` | Cron-Wrapper: aktiviert venv, ruft `main.py scan --universe eurostoxx50` auf |
+| `deploy/watchlist-listener.service.template` | systemd-Unit-Vorlage für den Telegram-Listener (`--universe eurostoxx50`) |
 
 **Hinweise:**
-- Serverzeitzone beachten (`timedatectl`) - die Cron-Uhrzeit in `deploy/install_cron.sh` ist auf Serverzeit bezogen, nicht auf US-Marktzeit.
+- Cron/Listener sind aktuell auf `eurostoxx50` und die Europe/Berlin-Serverzeitzone kalibriert. Für ein US-Setup (`sp500`/`nasdaq100`) `deploy/run_scan.sh`, `deploy/watchlist-listener.service.template` und die Cron-Uhrzeit in `deploy/install_cron.sh` entsprechend anpassen (US-Pre-Market liegt bei Berlin-Serverzeit ca. 6h vor der Cron-Zeit einer europäischen Marktöffnung).
+- Serverzeitzone beachten (`timedatectl`) - die Cron-Uhrzeit in `deploy/install_cron.sh` ist auf Serverzeit bezogen.
 - Nach jedem `git pull` auf dem VPS: `sudo systemctl restart watchlist-listener`, damit der Listener den neuen Code lädt.
 - `.env` niemals ins Git-Repo committen (ist in `.gitignore` ausgeschlossen).
 
