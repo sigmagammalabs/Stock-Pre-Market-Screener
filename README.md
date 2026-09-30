@@ -172,3 +172,7 @@ screener/
   Tabellenausgabe ohne KI-Text).
 - Ohne `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` wird der Versand übersprungen
   und ein Fehler geloggt, das Hauptskript bricht nicht ab.
+- Der Listener (`main.py listen`) beantwortet nur Nachrichten aus dem Chat
+  `TELEGRAM_CHAT_ID`; alle anderen werden geloggt und ohne Antwort verworfen.
+  Ohne `TELEGRAM_CHAT_ID` startet er nicht - sonst könnte jeder, der den
+  Bot-Namen kennt, Scans (mit Groq-Kosten) auslösen und die Ergebnisse lesen.

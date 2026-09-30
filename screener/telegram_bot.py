@@ -1,4 +1,9 @@
-"""Long-polling Telegram bot: parses free-text commands via Groq and runs scans."""
+"""Long-polling Telegram bot: parses free-text commands via Groq and runs scans.
+
+Sicherheit: Verarbeitet werden nur Nachrichten aus dem Chat TELEGRAM_CHAT_ID.
+Alles andere wird geloggt und ohne Antwort verworfen - sonst koennte jeder,
+der den Bot-Namen findet, Scans (mit Groq-Kosten) ausloesen und mitlesen.
+"""
 
 from __future__ import annotations
 
@@ -82,8 +87,17 @@ def _handle_message(text: str, config: ScreenerConfig, secrets: Secrets) -> str:
 def run_listener(config: ScreenerConfig, secrets: Secrets, poll_interval: float = 3.0) -> None:
     if not secrets.telegram_bot_token:
         raise ValueError("TELEGRAM_BOT_TOKEN fehlt - Listener kann nicht gestartet werden.")
+    authorized_chat_id = (secrets.telegram_chat_id or "").strip()
+    if not authorized_chat_id:
+        raise ValueError(
+            "TELEGRAM_CHAT_ID fehlt - ohne sie wuerde der Bot jedem antworten. Listener startet nicht."
+        )
 
-    logger.info("Telegram-Bot-Listener gestartet (Poll-Intervall: %.1fs). Strg+C zum Beenden.", poll_interval)
+    logger.info(
+        "Telegram-Bot-Listener gestartet (Poll-Intervall: %.1fs, autorisierte chat_id=%s). Strg+C zum Beenden.",
+        poll_interval,
+        authorized_chat_id,
+    )
     url = GET_UPDATES_URL.format(token=secrets.telegram_bot_token)
     offset = None
 
@@ -104,6 +118,11 @@ def run_listener(config: ScreenerConfig, secrets: Secrets, poll_interval: float 
 
                 chat_id = message["chat"]["id"]
                 text = message["text"]
+                if str(chat_id) != authorized_chat_id:
+                    logger.warning(
+                        "Nachricht von nicht autorisierter chat_id=%s ignoriert: %r", chat_id, text[:100]
+                    )
+                    continue
                 logger.info("Nachricht von chat_id=%s: %s", chat_id, text)
 
                 reply = _handle_message(text, config, secrets)
