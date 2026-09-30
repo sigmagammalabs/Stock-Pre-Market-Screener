@@ -124,10 +124,31 @@ Der Telegram-Listener (`python main.py listen`) ist ein Dauerprozess und
 gehört nicht in einen Cronjob - stattdessen z. B. via `systemd`-Service,
 `pm2`, oder als geplanter "bei Systemstart"-Task betreiben.
 
+## Docker
+
+```bash
+docker build -t premarket-screener .
+docker run --rm --env-file .env -v "$PWD/watchlist:/app/watchlist" \
+  premarket-screener scan --universe custom --tickers SAP.DE,SIE.DE --min-gap-pct 0.1
+```
+
+Bei jedem Push nach `main` baut GitHub Actions (`.github/workflows/docker-publish.yml`)
+das Image für amd64 und arm64 und legt es ab als
+`ghcr.io/sigmagammalabs/premarket-screener:latest` und `:sha-<commit>` (für Rollbacks).
+Secrets kommen zur Laufzeit als Umgebungsvariablen, nie ins Image.
+
+Auf dem VPS mit Portainer läuft der Screener als eigener Docker-Stack: `main.py listen`
+als Dauerprozess, der werktägliche Scan per `docker exec` im selben Container. Die
+Stack-Definition liegt im Plattform-Repo `vps-platform` (`stacks/premarket-screener`).
+Die systemd/cron-Einrichtung oben bleibt als Alternative erhalten - beide Wege nicht
+parallel auf demselben Server betreiben, sonst laufen Scans doppelt und zwei Listener
+konkurrieren um dieselben Telegram-Nachrichten.
+
 ## Architektur
 
 ```
 main.py                     CLI-Einstiegspunkt (scan / listen)
+Dockerfile                  Image für den VPS (GitHub Actions -> ghcr.io)
 screener/
   config.py                 Konfiguration & Secrets (.env)
   universe.py                Ticker-Universen (Wikipedia + Offline-Fallback)
