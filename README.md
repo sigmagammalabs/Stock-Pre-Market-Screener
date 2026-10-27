@@ -153,6 +153,7 @@ screener/
   config.py                 Konfiguration & Secrets (.env)
   universe.py                Ticker-Universen (Wikipedia + Offline-Fallback)
   data_fetcher.py            Datenanbieter-Abstraktion (yfinance impl., Alpaca/FMP Stubs)
+  identifiers.py/.csv        ISIN/WKN für DAX 40 und EURO STOXX 50 (geprüfte Tabelle)
   company_names.py           Firmennamen zu den Kürzeln (yfinance, Cache in watchlist/company_names.json)
   indicators.py               SMA / RSI / ATR / RVOL / Gap%
   scoring.py                  Trendausrichtung, gewichtetes Scoring, Setup-Klassifikation
@@ -168,6 +169,11 @@ screener/
 - Neben jedem Kürzel steht der Firmenname (Konsole, CSV/JSON, Telegram, KI-Briefing). Die Namen
   werden per yfinance abgefragt und einmalig in `watchlist/company_names.json` gecacht; schlägt eine
   Abfrage fehl, bleibt der Name leer und der Scan läuft normal weiter.
+- Für **DAX 40 und EURO STOXX 50** steht zusätzlich ISIN und WKN dabei. Sie kommen aus der festen
+  Tabelle `screener/identifiers.csv` (jede ISIN per Prüfziffer und gegen OpenFIGI geprüft), weil yfinance
+  die ISIN bei europäischen Titeln teils falsch liefert und keine WKN kennt. Die WKN wird nur bei deutschen
+  ISINs aus der ISIN abgeleitet; Ticker außerhalb der Tabelle (S&P 500, `/quote AAPL`) zeigen keine Kennung.
+  Ändert sich ein Index, neue Zeilen in der CSV ergänzen (Prüfziffer und OpenFIGI-Abgleich nicht vergessen).
 
 - `--provider alpaca` / `--provider fmp` sind als Interface-Stubs angelegt
   (`screener/data_fetcher.py`) und werfen `NotImplementedError`, bis eine

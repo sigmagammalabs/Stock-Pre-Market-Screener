@@ -61,14 +61,34 @@ def _format_row(row: pd.Series) -> str:
     gap_sign = "+" if gap >= 0 else ""
     name = row.get("Name")
     name_part = f" · {escape(name)}" if isinstance(name, str) and name else ""
+    isin = row.get("ISIN")
+    wkn = row.get("WKN")
+    id_line = ""
+    if isinstance(isin, str) and isin:
+        id_line = f"   ISIN {escape(isin)}" + (f" · WKN {escape(wkn)}" if isinstance(wkn, str) and wkn else "") + "\n"
     return (
         f"<b>{ticker}</b>{name_part}  ${price}\n"
+        f"{id_line}"
         f"   Gap: {gap_sign}{gap}%  |  RVOL: {rvol}x  |  ATR: {atr}\n"
         f"   RSI: {rsi}  |  {trend}"
     )
 
 
 def format_watchlist_message(df: pd.DataFrame, top_n: int = 8, ai_summary: str | None = None) -> str:
+    # Name und ISIN/WKN machen jede Zeile länger. Statt die Nachricht hart bei
+    # 4096 Zeichen abzuschneiden (dabei ginge das KI-Briefing am Ende verloren und
+    # ein offenes HTML-Tag würde die Zustellung ablehnen), weniger Treffer zeigen.
+    message = _build_message(df, top_n, ai_summary)
+    while len(message) > MAX_MESSAGE_LENGTH and top_n > 1:
+        top_n -= 1
+        message = _build_message(df, top_n, ai_summary)
+    if len(message) > MAX_MESSAGE_LENGTH:
+        logger.warning("Nachricht überschreitet %d Zeichen (%d) - wird gekürzt.", MAX_MESSAGE_LENGTH, len(message))
+        message = message[: MAX_MESSAGE_LENGTH - 20].rstrip() + "\n…"
+    return message
+
+
+def _build_message(df: pd.DataFrame, top_n: int, ai_summary: str | None) -> str:
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
     lines = [f"🌅 <b>Pre-Market Watchlist</b> — {now}", ""]
 
@@ -95,8 +115,4 @@ def format_watchlist_message(df: pd.DataFrame, top_n: int = 8, ai_summary: str |
         lines.append("🤖 <b>KI-Briefing</b>")
         lines.append(escape(ai_summary))
 
-    message = "\n".join(lines)
-    if len(message) > MAX_MESSAGE_LENGTH:
-        logger.warning("Nachricht überschreitet %d Zeichen (%d) - wird gekürzt.", MAX_MESSAGE_LENGTH, len(message))
-        message = message[: MAX_MESSAGE_LENGTH - 20].rstrip() + "\n…"
-    return message
+    return "\n".join(lines)

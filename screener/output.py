@@ -14,11 +14,11 @@ from rich.table import Table
 
 logger = logging.getLogger(__name__)
 
-DISPLAY_COLUMNS = ["Ticker", "Name", "Price", "Gap%", "RVOL", "ATR", "RSI", "Trend", "Setup", "Score"]
-LEFT_ALIGNED = {"Ticker", "Name", "Trend"}
+DISPLAY_COLUMNS = ["Ticker", "Name", "ISIN", "WKN", "Price", "Gap%", "RVOL", "ATR", "RSI", "Trend", "Setup", "Score"]
+LEFT_ALIGNED = {"Ticker", "Name", "ISIN", "WKN", "Trend"}
+OPTIONAL_COLUMNS = {"ISIN", "WKN"}
 
-
-LOG_WIDTH = 130
+LOG_WIDTH = 150
 
 
 def render_console_table(df: pd.DataFrame, top_n: int | None = None) -> None:
@@ -36,15 +36,18 @@ def render_console_table(df: pd.DataFrame, top_n: int | None = None) -> None:
         if subset.empty:
             continue
 
+        # ISIN/WKN gibt es nur für DAX 40 und EURO STOXX 50; ohne Treffer weglassen.
+        columns = [c for c in DISPLAY_COLUMNS if not (c in OPTIONAL_COLUMNS and subset[c].eq("").all())]
+
         table = Table(title=f"{setup_name} ({len(subset)})", header_style=style, title_style=style)
-        for col in DISPLAY_COLUMNS:
+        for col in columns:
             justify = "left" if col in LEFT_ALIGNED else "right"
             if col == "Name":
                 table.add_column(col, justify=justify, max_width=24, no_wrap=True, overflow="ellipsis")
             else:
                 table.add_column(col, justify=justify)
         for _, row in subset.iterrows():
-            table.add_row(*(str(row[c]) for c in DISPLAY_COLUMNS))
+            table.add_row(*(str(row[c]) for c in columns))
         console.print(table)
 
 

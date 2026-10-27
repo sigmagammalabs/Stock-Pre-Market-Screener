@@ -6,7 +6,7 @@ import logging
 
 import pandas as pd
 
-from . import company_names, indicators, scoring
+from . import company_names, identifiers, indicators, scoring
 from .config import ScreenerConfig, Secrets
 from .data_fetcher import get_provider
 from .universe import get_tickers
@@ -17,7 +17,7 @@ ROW_COLUMNS = [
     "Ticker", "Price", "PrevClose", "Gap%", "RVOL", "ATR", "ATR%", "RSI",
     "SMA20", "SMA50", "SMA200", "Trend", "Setup", "Score",
 ]
-RESULT_COLUMNS = ROW_COLUMNS[:1] + ["Name"] + ROW_COLUMNS[1:]
+RESULT_COLUMNS = ROW_COLUMNS[:1] + ["Name", "ISIN", "WKN"] + ROW_COLUMNS[1:]
 
 
 def screen_market(
@@ -75,6 +75,9 @@ def screen_market(
     df = df.sort_values("Score", ascending=False).reset_index(drop=True)
     names = company_names.resolve_names(provider, df["Ticker"].tolist(), config.output_dir, config.max_workers)
     df.insert(1, "Name", df["Ticker"].map(names))
+    ids = df["Ticker"].map(identifiers.lookup)
+    df.insert(2, "ISIN", ids.map(lambda pair: pair[0]))
+    df.insert(3, "WKN", ids.map(lambda pair: pair[1]))
     return df
 
 
