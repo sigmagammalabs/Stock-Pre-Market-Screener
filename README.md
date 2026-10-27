@@ -153,6 +153,7 @@ screener/
   config.py                 Konfiguration & Secrets (.env)
   universe.py                Ticker-Universen (Wikipedia + Offline-Fallback)
   data_fetcher.py            Datenanbieter-Abstraktion (yfinance impl., Alpaca/FMP Stubs)
+  company_names.py           Firmennamen zu den Kürzeln (yfinance, Cache in watchlist/company_names.json)
   indicators.py               SMA / RSI / ATR / RVOL / Gap%
   scoring.py                  Trendausrichtung, gewichtetes Scoring, Setup-Klassifikation
   screener_engine.py          Orchestrierung: Fetch -> Filter -> Score -> DataFrame
@@ -163,6 +164,10 @@ screener/
 ```
 
 ## Hinweise
+
+- Neben jedem Kürzel steht der Firmenname (Konsole, CSV/JSON, Telegram, KI-Briefing). Die Namen
+  werden per yfinance abgefragt und einmalig in `watchlist/company_names.json` gecacht; schlägt eine
+  Abfrage fehl, bleibt der Name leer und der Scan läuft normal weiter.
 
 - `--provider alpaca` / `--provider fmp` sind als Interface-Stubs angelegt
   (`screener/data_fetcher.py`) und werfen `NotImplementedError`, bis eine

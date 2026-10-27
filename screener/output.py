@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 from datetime import datetime
 
 import pandas as pd
@@ -13,11 +14,17 @@ from rich.table import Table
 
 logger = logging.getLogger(__name__)
 
-DISPLAY_COLUMNS = ["Ticker", "Price", "Gap%", "RVOL", "ATR", "RSI", "Trend", "Setup", "Score"]
+DISPLAY_COLUMNS = ["Ticker", "Name", "Price", "Gap%", "RVOL", "ATR", "RSI", "Trend", "Setup", "Score"]
+LEFT_ALIGNED = {"Ticker", "Name", "Trend"}
+
+
+LOG_WIDTH = 130
 
 
 def render_console_table(df: pd.DataFrame, top_n: int | None = None) -> None:
-    console = Console()
+    # Ohne TTY (Cron/docker exec/Log-Dateien) meldet Rich 80 Spalten; mit der
+    # Name-Spalte würden dann alle Spalten auf "Ti…"/"Pr…" schrumpfen.
+    console = Console(width=None if sys.stdout.isatty() else LOG_WIDTH)
     if df.empty:
         console.print("[yellow]Keine Treffer für die aktuellen Filterkriterien.[/yellow]")
         return
@@ -31,7 +38,11 @@ def render_console_table(df: pd.DataFrame, top_n: int | None = None) -> None:
 
         table = Table(title=f"{setup_name} ({len(subset)})", header_style=style, title_style=style)
         for col in DISPLAY_COLUMNS:
-            table.add_column(col, justify="right" if col != "Ticker" and col != "Trend" else "left")
+            justify = "left" if col in LEFT_ALIGNED else "right"
+            if col == "Name":
+                table.add_column(col, justify=justify, max_width=24, no_wrap=True, overflow="ellipsis")
+            else:
+                table.add_column(col, justify=justify)
         for _, row in subset.iterrows():
             table.add_row(*(str(row[c]) for c in DISPLAY_COLUMNS))
         console.print(table)

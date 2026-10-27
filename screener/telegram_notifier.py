@@ -59,8 +59,10 @@ def _format_row(row: pd.Series) -> str:
     rsi = row["RSI"]
     trend = escape(str(row["Trend"]))
     gap_sign = "+" if gap >= 0 else ""
+    name = row.get("Name")
+    name_part = f" · {escape(name)}" if isinstance(name, str) and name else ""
     return (
-        f"<b>{ticker}</b>  ${price}\n"
+        f"<b>{ticker}</b>{name_part}  ${price}\n"
         f"   Gap: {gap_sign}{gap}%  |  RVOL: {rvol}x  |  ATR: {atr}\n"
         f"   RSI: {rsi}  |  {trend}"
     )

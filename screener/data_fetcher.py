@@ -37,6 +37,10 @@ class DataProvider(abc.ABC):
     def fetch_quote(self, ticker: str) -> Quote | None:
         """Return the latest available (pre-market aware) quote for a ticker."""
 
+    def fetch_company_name(self, ticker: str) -> str | None:
+        """Return the company name for a ticker, or None if the provider has none."""
+        return None
+
     def fetch_daily_history_batch(self, tickers: list[str], period: str, max_workers: int = 10) -> dict[str, pd.DataFrame]:
         results: dict[str, pd.DataFrame] = {}
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
@@ -111,6 +115,15 @@ class YFinanceProvider(DataProvider):
                          volume=float(volume) if volume is not None else None)
         except Exception as exc:
             logger.debug("quote fetch failed for %s: %s", ticker, exc)
+            return None
+
+    def fetch_company_name(self, ticker: str) -> str | None:
+        try:
+            info = self._yf.Ticker(ticker).info
+            name = info.get("longName") or info.get("shortName")
+            return str(name).strip() if name else None
+        except Exception as exc:
+            logger.debug("name lookup failed for %s: %s", ticker, exc)
             return None
 
 
